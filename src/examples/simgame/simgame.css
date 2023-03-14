@@ -1,3 +1,4 @@
+
 .slider-label{
     /* margin: auto; */
     color: white;
@@ -457,4 +458,19 @@ a.active,a:hover{
 
 .invisible {
   display: none;
+}
+
+.tips {
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  text-align: center;
+  transform: translateX(-45%);
+  background-color: #61b4f4;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.label3d{
+  font-size: 33;
 }
