@@ -9,6 +9,15 @@ import {
 import rhino3dm from "https://cdn.jsdelivr.net/npm/rhino3dm@7.14.0/rhino3dm.module.js";
 import tipList from "./TipList.json" assert { type: "json" };
 
+let textBasePtX,
+  textBasePtY,
+  textBasePtZ,
+  textBasePtXArray,
+  textBasePtYArray,
+  textBasePtZArray;
+let labelCube = new THREE.BoxGeometry(1, 1, 1);
+const materialLabelCube = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const labelCubeMesh = new THREE.Mesh(labelCube, materialLabelCube);
 //import GUI from 'https://cdn.jsdelivr.net/npm/lil-gui@0.18/+esm';
 
 // import  GUI from 'lil-gui'
@@ -288,7 +297,7 @@ async function compute() {
 /**
  * Parse response
  */
-let textBasePtX, textBasePtY, textBasePtZ;
+
 function collectResults(responseJson) {
   const values = responseJson.values;
   // console.log(values)
@@ -310,6 +319,7 @@ function collectResults(responseJson) {
           textBasePtX = values[i]["InnerTree"]["{0}"][0].data
             .split('"')
             .join("");
+          // textBasePtXArray dodanie do arrayu X-ów
         } else if (values[i]["ParamName"] === "RH_OUT:textBasePtY") {
           textBasePtY = values[i]["InnerTree"]["{0}"][0].data
             .split('"')
@@ -494,9 +504,8 @@ function collectResults(responseJson) {
     // add object graph from rhino model to three.js scene
     scene.add(object);
     //console.log(object)
-
-    //create labels for desk simulation values
-    createGridLabels();
+    scene.add(labelCubeMesh);
+    labelCubeMesh.visible = false;
     // hide spinner and enable download button
     showSpinner(false);
     //downloadButton.disabled = false
@@ -504,6 +513,7 @@ function collectResults(responseJson) {
     // zoom to extents
     //zoomCameraToSelection(camera, controls, scene.children)
 
+    createGridLabels();
     updateAllMaterials();
   });
 }
@@ -683,6 +693,8 @@ function init() {
   camera.lookAt(new THREE.Vector3(6, 6, 0));
 
   window.addEventListener("resize", onWindowResize, false);
+
+  //create labels for desk simulation values
   animate();
 }
 
@@ -702,11 +714,14 @@ function animate() {
 }
 
 function createGridLabels() {
-  const gridLabelDiv = document.createElement("div");
-  gridLabelDiv.classList.add("label");
+  let gridLabelDiv = document.createElement("div");
+  document.body.appendChild(gridLabelDiv);
+  gridLabelDiv.classList.add("gridlabel");
   gridLabelDiv.textContent = "some value";
-  const gridLabel = new CSS2DObject(gridLabelDiv);
-  gridLabel.position.set(textBasePtX, textBasePtY, textBasePtZ);
+  let gridLabel = new CSS2DObject(gridLabelDiv);
+  labelCubeMesh.add(gridLabel);
+  console.log(gridLabel);
+  gridLabel.position.set(textBasePtX, textBasePtY, textBasePtZ - 0.5);
 
   gridLabel.layers.set(0);
   camera.layers.enableAll();

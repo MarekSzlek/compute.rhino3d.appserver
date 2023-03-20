@@ -460,11 +460,12 @@ a:hover {
   border-radius: 10px;
 }
 
-.label {
-  color: #fff;
+.gridlabel {
+  color: #000000;
   font-family: sans-serif;
-  padding: 2px;
+  padding: 5px;
   background: rgba(0, 0, 0, 0.6);
+  position: absolute;
 }
 
 .label3d {
