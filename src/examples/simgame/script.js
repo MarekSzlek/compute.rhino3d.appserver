@@ -1,4 +1,5 @@
 import * as THREE from "three";
+
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Rhino3dmLoader } from "three/examples/jsm/loaders/3DMLoader";
 //import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer'
@@ -35,7 +36,7 @@ const definition = "simgame.gh";
 /**
  * Raycaster
  */
-const raycaster = new THREE.Raycaster();
+//const raycaster = new THREE.Raycaster();
 let currentIntersect = null;
 const rayOrigin = new THREE.Vector3(-3, 0, 0);
 const rayDirection = new THREE.Vector3(10, 0, 0);
@@ -164,26 +165,165 @@ StartButton.addEventListener("change", function () {
   compute();
 });
 
-/**
- * Mouse
- */
+//CreateDiv
 
-// const mouse = new THREE.Vector2()
+function createDivWithText() {
+  const box = document.createElement("div");
+  box.id = "box";
+  box.className = "gridtext";
+  box.textContent = "LUX";
+  box.style.visibility = "hidden";
+  document.body.appendChild(box);
+}
 
-// window.addEventListener('pointermove', (e) => {
-//   mouse.set((e.clientX / width) * 2 - 1, -(e.clientY / height) * 2 + 1)
-//   raycaster.setFromCamera(mouse, camera)
-//   intersects = raycaster.intersectObjects(scene.children, true)
+function updateDivPosition(event) {
+  // Get the mouse position relative to the viewport
+  const x = event.clientX;
+  const y = event.clientY - 20;
 
-//   // If a previously hovered item is not among the hits we must call onPointerOut
-//   Object.keys(hovered).forEach((key) => {
-//     const hit = intersects.find((hit) => hit.object.uuid === key)
-//     if (hit === undefined) {
-//       const hoveredItem = hovered[key]
-//       if (hoveredItem.object.onPointerOver) hoveredItem.object.onPointerOut(hoveredItem)
-//       delete hovered[key]
-//     }
-//   })
+  // Get the div element
+  const myDiv = document.getElementById("box");
+
+  // Update the div position
+  myDiv.style.left = x + "px";
+  myDiv.style.top = y + "px";
+}
+
+// Add event listener to update the div position on mouse move
+document.addEventListener("mousemove", updateDivPosition);
+
+// Mouse
+
+const mouse = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
+
+var width = 0;
+var height = 0;
+let intersects = [];
+let hovered = {};
+
+width = window.innerWidth;
+height = window.innerHeight;
+
+var gridHover = new THREE.MeshStandardMaterial({ color: "blue" });
+var grid = new THREE.MeshStandardMaterial({
+  vertexColors: true,
+  opacity: 0.55,
+  transparent: true,
+  depthTest: false,
+});
+var glare = new THREE.MeshStandardMaterial({
+  vertexColors: true,
+  opacity: 0.55,
+  transparent: true,
+  depthTest: false,
+});
+
+// create a variable to store the intersected object
+let INTERSECTED;
+
+window.addEventListener("pointermove", (e) => {
+  //mouse.set((e.clientX / width) * 2 - 1, -(e.clientY / height) * 2 + 1);
+
+  var rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / (rect.right - rect.left)) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / (rect.bottom - rect.top)) * 2 + 1;
+
+  //camera.position.copy(originalCameraPosition)
+
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(scene.children, true);
+  // for ( let i = 0; i < intersects.length; i ++ ) {
+
+  // 	intersects[ i ].object.material.color.set( 0xff0000 );
+
+  // }
+  //__________________
+
+  // if there is one (or more) intersections
+  if (intersects.length > 0) {
+    // if the closest object intersected is not the currently stored intersection object
+    // and has a name of "daylight"
+    if (
+      intersects[0].object != INTERSECTED &&
+      intersects[0].object.name === "RH_OUT:grid_daylight"
+    ) {
+      const myDiv = document.getElementById("box");
+
+      // let objects = scene.children[2].children;
+      // let index = -1;
+      // //console.log("objects: " + objects)
+
+      //   for (let i = 0; i < objects.length; i++) {
+
+      //     console.log("uuid: " + objects[i].uuid)
+      //     // console.log("uuid 2: " + Object.getOwnPropertyNames(INTERSECTED))
+      //     // if (objects[i].uuid === INTERSECTED.uuid) {
+      //     //   index = i;
+      //     //   break;
+      //     // }
+      //   }
+
+      // myDiv.innerHTML = index;
+
+      // restore previous intersection object (if it exists) to its original color
+      if (INTERSECTED) {
+        INTERSECTED.material = grid;
+        console.log(INTERSECTED.material);
+        myDiv.style.visibility = "hidden";
+      }
+
+      // store reference to closest object as current intersection object
+      INTERSECTED = intersects[0].object;
+
+      // store color of closest object (for later restoration)
+      //INTERSECTED.currentHex = INTERSECTED.material.color.getHex();
+
+      // set a new color for closest object
+      //INTERSECTED.material.color.setHex( 0xff0000 );
+      INTERSECTED.material = gridHover;
+
+      myDiv.style.visibility = "visible";
+    }
+  } else {
+    // there are no intersections
+
+    // restore previous intersection object (if it exists) to its original color
+    if (INTERSECTED) {
+      INTERSECTED.material = grid;
+      // const myDiv = document.getElementById("box");
+      // myDiv.style.visibility = "hidden";
+    }
+    // remove previous intersection object reference by setting current intersection object to "nothing"
+    INTERSECTED = null;
+
+    const myDiv = document.getElementById("box");
+    myDiv.style.visibility = "hidden";
+  }
+
+  //___________________________
+
+  //If a previously hovered item is not among the hits we must call onPointerOut
+
+  // Object.keys(hovered).forEach((key) => {
+  //   const hit = intersects.find((hit) => hit.object.uuid === key)
+  //   if (hit === undefined) {
+  //     const hoveredItem = hovered[key]
+  //     if (hoveredItem.object.onPointerOver) hoveredItem.object.onPointerOut(hoveredItem)
+  //     delete hovered[key]
+  //   }
+  // })
+
+  // intersects.forEach((hit) => {
+  //   // If a hit has not been flagged as hovered we must call onPointerOver
+  //   if (!hovered[hit.object.uuid]) {
+  //     hovered[hit.object.uuid] = hit
+  //     if (hit.object.onPointerOver) hit.object.onPointerOver(hit)
+  //   }
+  //   // Call onPointerMove
+  //   if (hit.object.onPointerMove) hit.object.onPointerMove(hit)
+  // })
+});
 
 // load the rhino3dm library
 let rhino, doc;
@@ -364,63 +504,63 @@ function collectResults(responseJson) {
   };
 
   //Three.js material definitions for Simulation Game model
-  var mat_wall_transparent = new THREE.MeshStandardMaterial({ color: "white" });
-  // var mat_wall_transparent = new THREE.MeshStandardMaterial( { color: "white", transparent:true, opacity: 0.2 } );
-  var mat_wall_solid = new THREE.MeshStandardMaterial({ color: "white" });
-  var mat_floor = new THREE.MeshStandardMaterial({
+  let mat_wall_transparent = new THREE.MeshStandardMaterial({ color: "white" });
+  // let mat_wall_transparent = new THREE.MeshStandardMaterial( { color: "white", transparent:true, opacity: 0.2 } );
+  let mat_wall_solid = new THREE.MeshStandardMaterial({ color: "white" });
+  let mat_floor = new THREE.MeshStandardMaterial({
     color: "white",
     side: THREE.DoubleSide,
   });
-  var mat_window_glass = new THREE.MeshStandardMaterial({
+  let mat_window_glass = new THREE.MeshStandardMaterial({
     color: "white",
     transparent: true,
     opacity: 0.2,
   });
-  var mat_window_frame = new THREE.MeshStandardMaterial({ color: "gray" });
-  var mat_window_wall = new THREE.MeshStandardMaterial({
+  let mat_window_frame = new THREE.MeshStandardMaterial({ color: "gray" });
+  let mat_window_wall = new THREE.MeshStandardMaterial({
     color: new THREE.Color(0x1757bf),
     side: THREE.DoubleSide,
   });
-  var mat_desk_screen = new THREE.MeshStandardMaterial({ color: "black" });
-  var mat_desk_plastic = new THREE.MeshStandardMaterial({
+  let mat_desk_screen = new THREE.MeshStandardMaterial({ color: "black" });
+  let mat_desk_plastic = new THREE.MeshStandardMaterial({
     color: new THREE.Color(0x70baff),
   });
-  var mat_desk_desktop = new THREE.MeshStandardMaterial({
+  let mat_desk_desktop = new THREE.MeshStandardMaterial({
     color: new THREE.Color(0xccfbff),
   });
-  var mat_desk_fabric = new THREE.MeshStandardMaterial({
+  let mat_desk_fabric = new THREE.MeshStandardMaterial({
     color: new THREE.Color(0x4ad2ff),
   });
-  var mat_desk_legs = new THREE.MeshStandardMaterial({
+  let mat_desk_legs = new THREE.MeshStandardMaterial({
     color: new THREE.Color(0x0074d9),
   });
-  var mat_desk_keyboard = new THREE.MeshStandardMaterial({
+  let mat_desk_keyboard = new THREE.MeshStandardMaterial({
     color: new THREE.Color(0x0057a8),
   });
-  var mat_undefined = new THREE.MeshStandardMaterial({
+  let mat_undefined = new THREE.MeshStandardMaterial({
     color: new THREE.Color(0xff0000),
   });
-  var grid = new THREE.MeshStandardMaterial({
+  let grid = new THREE.MeshStandardMaterial({
     vertexColors: true,
     opacity: 0.55,
     transparent: true,
     depthTest: false,
   });
-  var glare = new THREE.MeshStandardMaterial({
+  let glare = new THREE.MeshStandardMaterial({
     vertexColors: true,
     opacity: 0.55,
     transparent: true,
     depthTest: false,
   });
-  var text = new THREE.MeshStandardMaterial({
+  let text = new THREE.MeshStandardMaterial({
     color: "blue",
     side: THREE.DoubleSide,
   });
-  var NorthSymbol = new THREE.MeshStandardMaterial({
+  let NorthSymbol = new THREE.MeshStandardMaterial({
     color: new THREE.Color(0x0055de),
     side: THREE.DoubleSide,
   });
-  var wallLines = new THREE.MeshPhongMaterial({
+  let wallLines = new THREE.MeshPhongMaterial({
     color: "white",
     emissive: "white",
     emissiveIntensity: 4,
@@ -495,17 +635,20 @@ function collectResults(responseJson) {
         console.log("Assigned an undefined material!");
       }
     });
+
     // clear objects from scene. do this here to avoid blink
     scene.traverse((child) => {
       if (!child.isLight && child.name !== "context") {
         scene.remove(child);
       }
     });
+
     // add object graph from rhino model to three.js scene
     scene.add(object);
     //console.log(object)
     scene.add(labelCubeMesh);
     labelCubeMesh.visible = false;
+
     // hide spinner and enable download button
     showSpinner(false);
     //downloadButton.disabled = false
@@ -588,6 +731,7 @@ let scene,
   renderer,
   labelRenderer,
   controls,
+  originalCameraPosition,
   directional_light,
   textBasePt;
 
@@ -605,6 +749,7 @@ function init() {
     1000
   );
 
+  originalCameraPosition = camera.position.clone();
   //environmentlight
 
   const cubeTextureLoader = new THREE.CubeTextureLoader();
@@ -623,6 +768,8 @@ function init() {
 
   environmentMap.encoding = THREE.sRGBEncoding;
   //scene.environment = environmentMap
+
+  createDivWithText();
 
   //
   // directional_light = new THREE.DirectionalLight( 0xffffff, 2.5 );
@@ -687,7 +834,7 @@ function init() {
   controls = new OrbitControls(camera, labelRenderer.domElement);
   controls.enableDamping = true;
 
-  // camera.position.x = 5;
+  camera.position.x = 5;
   camera.position.y = -10;
   camera.position.z = 25;
   camera.lookAt(new THREE.Vector3(6, 6, 0));
@@ -700,13 +847,6 @@ function init() {
 
 function animate() {
   requestAnimationFrame(animate);
-  scene.traverse(function (child) {
-    if (child.name == "RH_OUT:text") {
-      //child.rotation.z += 0.05
-      // child.lookAt(camera.position);
-      // console.log(textBasePtX, textBasePtY, textBasePtZ);
-    }
-  });
 
   controls.update();
   renderer.render(scene, camera);
